@@ -1,114 +1,11 @@
 #!/usr/bin/env python3
-# Author: liusixiang@geetest.com
-# Date: 2020/4/2
+
 
 import networkx as nx
 import psycopg2
-
-
-class Unsupported(Exception):
-    pass
-
-
-def unsupported(err_msg):
-    def _unsupported(func):
-        def _raise_exception():
-            raise Unsupported(err_msg)
-        return _raise_exception
-
-    return _unsupported
-
-
-sql_factory = {
-    "count_node": "SELECT COUNT(1) FROM vertices",
-    "count_edge": "SELECT COUNT(1) FROM edges",
-    "sum_edge_weight": "SELECT SUM(%s) FROM edges",
-    "check_node_exists": "SELECT COUNT(1) FROM vertices WHERE id = %s",
-    "check_edge_exists": "SELECT COUNT(1) FROM edges WHERE src_id = %s AND dst_id = %s",
-    "query_node": "SELECT <attrs> FROM vertices WHERE id = %s",
-    "query_edge": "SELECT %s FROM edges WHERE src_id = %s AND dst_id = %s",
-    "query_adj": "SELECT edges.dst_id, <attrs> FROM edges WHERE edges.src_id = %s UNION SELECT edges.src_id, <attrs> FROM edges WHERE edges.dst_id = %s",
-    "iter_node": "SELECT id FROM vertices",
-    "iter_adj": "SELECT DISTINCT src_id FROM edges UNION SELECT DISTINCT dst_id FROM edges",
-}
-
-
-class DAO:
-    def __init__(self, db_config, attrs):
-        self._conn = psycopg2.connect(**db_config)
-        self._query_cur = self._conn.cursor()
-        self._iter_cur = self._conn.cursor()
-        self._attrs = attrs
-        self._cached = []
-        self._start_iteration = False
-
-    def __del__(self):
-        self._conn.close()
-
-
-class CursorIter:
-    def __init__(self, cur):
-        self._cur = cur
-
-    def __next__(self):
-        node = self._cur.fetchone()
-        if node:
-            return node[0]
-        else:
-            raise StopIteration
-
-    def __iter__(self):
-        return self
-
-
-class ItemIter:
-    def __init__(self, adj_dao):
-        self._adj_dao = adj_dao
-        self._adj_iter = iter(adj_dao)
-
-    def __next__(self):
-        adj_node = next(self._adj_iter)
-        return adj_node, self._adj_dao[adj_node]
-
-    def __iter__(self):
-        return self
-
-
-class NodeDAO(DAO):
-    def __getitem__(self, n):
-        self._query_cur.execute(
-            sql_factory["query_node"].replace("<attrs>", ', '.join(self._attrs)), (n, )
-        )
-        node_attr = self._query_cur.fetchall()
-        if not node_attr:
-            raise KeyError(n)
-        return dict(zip(self._attrs, node_attr[0]))
-
-    def __iter__(self):
-        self._iter_cur.execute(sql_factory["iter_node"])
-        return CursorIter(self._iter_cur)
-
-
-class AdjDAO(DAO):
-    def __getitem__(self, n):
-        self._query_cur.execute(
-            sql_factory["query_adj"].replace("<attrs>", ', '.join(self._attrs)), (n, n)
-        )
-        edge_attr = self._query_cur.fetchall()
-        if not edge_attr:
-            raise KeyError(n)
-        return {rec[0]: dict(zip(self._attrs, rec[1:])) for rec in edge_attr}
-
-    def __iter__(self):
-        self._iter_cur.execute(sql_factory["iter_adj"])
-        return CursorIter(self._iter_cur)
-
-    def iter_items(self):
-        self._iter_cur.execute(sql_factory["iter_adj"])
-        return ItemIter(self)
-
-    def items(self):
-        return list(self.iter_items())
+from unsupported import unsupported
+from sql_factory import SQL_FACTORY
+from dao import AdjDAO, NodeDAO
 
 
 class GraphGP(nx.Graph):
@@ -157,13 +54,13 @@ class GraphGP(nx.Graph):
 
     def __contains__(self, n):
         if isinstance(n, str) or isinstance(n, int):
-            self._cur.execute(sql_factory["check_node_exists"], (n, ))
+            self._cur.execute(SQL_FACTORY["check_node_exists"], (n, ))
             return self._cur.fetchall()[0][0] >= 1
         return False
 
     def __len__(self):
         if not self._length:
-            self._cur.execute(sql_factory["count_node"])
+            self._cur.execute(SQL_FACTORY["count_node"])
             self._length = self._cur.fetchall()[0][0]
         return self._length
 
@@ -222,14 +119,14 @@ class GraphGP(nx.Graph):
     def has_edge(self, u, v):
         assert u.__class__.__name__ == v.__class__.__name__
         self._cur.execute(
-            sql_factory["check_edge_exists"], (u, v)
+            SQL_FACTORY["check_edge_exists"], (u, v)
         )
         return self._cur.fetchall()[0][0] >= 1
 
     def get_edge_data(self, u, v, default=None):
         assert u.__class__.__name__ == v.__class__.__name__
         self._cur.execute(
-            sql_factory["query_edge"], (', '.join(self._edge_attrs), u, v)
+            SQL_FACTORY["query_edge"], (', '.join(self._edge_attrs), u, v)
         )
         edge_data = self._cur.fetchone()
         return dict(zip(self._edge_attrs, edge_data[0])) if edge_data else default
@@ -261,10 +158,10 @@ class GraphGP(nx.Graph):
 
     def size(self, weight=None):
         if weight:
-            self._cur.execute(sql_factory["sum_edge_weight"], (weight, ))
-            return self._cur.f
-            self._cur.execute(sql_factory["count_edge"])
-            return self._cur.fetchall()[0][0]
+            self._cur.execute(SQL_FACTORY["sum_edge_weight"], (weight, ))
+        else:
+            self._cur.execute(SQL_FACTORY["count_edge"])
+        return self._cur.fetchall()[0][0]
 
     def number_of_edges(self, u=None, v=None):
         if u is None:
