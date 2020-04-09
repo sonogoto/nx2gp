@@ -13,4 +13,5 @@ SQL_FACTORY = {
                   SELECT edges.src_id, <attrs> FROM edges WHERE edges.dst_id = %s",
     "iter_node": "SELECT id FROM vertices",
     "iter_adj": "SELECT DISTINCT src_id FROM edges UNION SELECT DISTINCT dst_id FROM edges",
+    "check_adj_exists": "SELECT COUNT(1) FROM edges WHERE src_id = %s OR dst_id = %s"
 }

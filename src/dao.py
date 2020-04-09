@@ -4,6 +4,7 @@ import psycopg2
 from sql_factory import SQL_FACTORY
 from iterators import CursorIter, ItemIter
 
+
 class DAO:
     def __init__(self, db_config, attrs):
         self._conn = psycopg2.connect(**db_config)
@@ -52,3 +53,9 @@ class AdjDAO(DAO):
 
     def items(self):
         return list(self.iter_items())
+
+    def __contains__(self, n):
+        if isinstance(n, str) or isinstance(n, int):
+            self._query_cur.execute(SQL_FACTORY["check_adj_exists"], (n, n))
+            return self._query_cur.fetchall()[0][0] >= 1
+        return False
