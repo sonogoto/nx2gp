@@ -10,8 +10,6 @@ from dao import AdjDAO, NodeDAO
 
 class GraphGP(nx.Graph):
 
-    graph_attr_dict_factory = dict
-
     def __init__(
             self,
             db_host="127.0.0.1",
@@ -158,7 +156,7 @@ class GraphGP(nx.Graph):
 
     def size(self, weight=None):
         if weight:
-            self._cur.execute(SQL_FACTORY["sum_edge_weight"], (weight, ))
+            self._cur.execute(SQL_FACTORY["sum_edge_weight"] % (weight, ))
         else:
             self._cur.execute(SQL_FACTORY["count_edge"])
         return self._cur.fetchall()[0][0]
@@ -172,6 +170,7 @@ class GraphGP(nx.Graph):
 
 
 if __name__ == "__main__":
-    G = GraphGP(db_port=15432, db_name="graph", node_attrs=["weight"], edge_attrs=["weight"])
-    print(G.adj[35])
+    G2 = GraphGP(db_port=15432, db_name="graph", node_attrs=["weight"], edge_attrs=["weight"])
+    G1 = nx.read_adjlist("/Users/simon/Downloads/eval_data/cora.csv", delimiter=",", nodetype=int)
+    print(nx.degree_pearson_correlation_coefficient(G2, ))
     pass
