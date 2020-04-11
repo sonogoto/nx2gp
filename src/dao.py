@@ -46,6 +46,10 @@ class NodeDAO(DAO):
             self._length = self._query_cur.fetchall()[0][0]
         return self._length
 
+    def items(self):
+        self._iter_cur.execute(SQL_FACTORY["iter_node"])
+        return list(ItemIter(self))
+
 
 class AdjDAO(DAO):
     def __getitem__(self, n):
