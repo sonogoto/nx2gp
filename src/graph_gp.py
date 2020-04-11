@@ -17,8 +17,8 @@ class GraphGP(nx.Graph):
             db_user="gpadmin",
             db_passwd=None,
             db_name="graph",
-            node_attrs=None,
-            edge_attrs=None,
+            node_attrs=('weight', ),
+            edge_attrs=('weight', ),
             **graph_attr):
 
         self._db_config = {
@@ -154,23 +154,3 @@ class GraphGP(nx.Graph):
     def to_undirected(self, as_view=False):
         return self.copy()
 
-    def size(self, weight=None):
-        if weight:
-            self._cur.execute(SQL_FACTORY["sum_edge_weight"] % (weight, ))
-        else:
-            self._cur.execute(SQL_FACTORY["count_edge"])
-        return self._cur.fetchall()[0][0]
-
-    def number_of_edges(self, u=None, v=None):
-        if u is None:
-            return int(self.size())
-        if v is None:
-            return 0
-        return int(self.has_edge(u, v))
-
-
-if __name__ == "__main__":
-    G2 = GraphGP(db_port=15432, db_name="graph", node_attrs=["weight"], edge_attrs=["weight"])
-    G1 = nx.read_adjlist("/Users/simon/Downloads/eval_data/cora.csv", delimiter=",", nodetype=int)
-    print(nx.degree_pearson_correlation_coefficient(G2, ))
-    pass
