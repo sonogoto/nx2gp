@@ -17,13 +17,13 @@ class CursorIter:
 
 
 class ItemIter:
-    def __init__(self, adj_dao):
-        self._adj_dao = adj_dao
-        self._adj_iter = iter(adj_dao)
+    def __init__(self, dao):
+        self._dao = dao
+        self._iter = iter(dao)
 
     def __next__(self):
-        adj_node = next(self._adj_iter)
-        return adj_node, self._adj_dao[adj_node]
+        node = next(self._iter)
+        return node, self._dao[node]
 
     def __iter__(self):
         return self
