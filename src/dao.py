@@ -11,7 +11,7 @@ class DAO:
         self._query_cur = self._conn.cursor()
         self._iter_cur = self._conn.cursor()
         self._attrs = attrs
-        self._cached = []
+        self._length = None
         self._start_iteration = False
 
     def __del__(self):
@@ -32,6 +32,20 @@ class NodeDAO(DAO):
         self._iter_cur.execute(SQL_FACTORY["iter_node"])
         return CursorIter(self._iter_cur)
 
+    def __contains__(self, n):
+        if isinstance(n, str) or isinstance(n, int):
+            self._query_cur.execute(
+                SQL_FACTORY["check_node_exists"], (n, )
+            )
+            return self._query_cur.fetchall()[0][0] >= 1
+        return False
+
+    def __len__(self):
+        if not self._length:
+            self._query_cur.execute(SQL_FACTORY["count_node"])
+            self._length = self._query_cur.fetchall()[0][0]
+        return self._length
+
 
 class AdjDAO(DAO):
     def __getitem__(self, n):
@@ -47,6 +61,18 @@ class AdjDAO(DAO):
         self._iter_cur.execute(SQL_FACTORY["iter_adj"])
         return CursorIter(self._iter_cur)
 
+    def __contains__(self, n):
+        if isinstance(n, str) or isinstance(n, int):
+            self._query_cur.execute(SQL_FACTORY["check_adj_exists"], (n, n))
+            return self._query_cur.fetchall()[0][0] >= 1
+        return False
+
+    def __len__(self):
+        if not self._length:
+            self._query_cur.execute(SQL_FACTORY["count_adj"])
+            self._length = self._query_cur.fetchall()[0][0]
+        return self._length
+
     def iter_items(self):
         self._iter_cur.execute(SQL_FACTORY["iter_adj"])
         return ItemIter(self)
@@ -54,8 +80,4 @@ class AdjDAO(DAO):
     def items(self):
         return list(self.iter_items())
 
-    def __contains__(self, n):
-        if isinstance(n, str) or isinstance(n, int):
-            self._query_cur.execute(SQL_FACTORY["check_adj_exists"], (n, n))
-            return self._query_cur.fetchall()[0][0] >= 1
-        return False
+

@@ -13,10 +13,10 @@ class GraphGP(nx.Graph):
     def __init__(
             self,
             db_host="127.0.0.1",
-            db_port=5432,
+            db_port=15432,
             db_user="gpadmin",
             db_passwd=None,
-            db_name=None,
+            db_name="graph",
             node_attrs=None,
             edge_attrs=None,
             **graph_attr):
@@ -45,7 +45,10 @@ class GraphGP(nx.Graph):
         self._length = None
 
     def __del__(self):
-        self._conn.close()
+        try:
+            self._conn.close()
+        except AttributeError:
+            pass
 
     def __iter__(self):
         return iter(self._node)
@@ -57,10 +60,7 @@ class GraphGP(nx.Graph):
         return False
 
     def __len__(self):
-        if not self._length:
-            self._cur.execute(SQL_FACTORY["count_node"])
-            self._length = self._cur.fetchall()[0][0]
-        return self._length
+        return self._node.__len__()
 
     def __getitem__(self, n):
         return self.adj[n]
