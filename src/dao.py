@@ -15,7 +15,10 @@ class DAO:
         self._start_iteration = False
 
     def __del__(self):
-        self._conn.close()
+        try:
+            self._conn.close()
+        except AttributeError:
+            pass
 
 
 class NodeDAO(DAO):
