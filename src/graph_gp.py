@@ -3,7 +3,7 @@
 
 import networkx as nx
 import psycopg2
-from unsupported import unsupported
+from not_permitted import not_permitted
 from sql_factory import SQL_FACTORY
 from dao import AdjDAO, NodeDAO
 
@@ -39,9 +39,6 @@ class GraphGP(nx.Graph):
         self._adj = AdjDAO(self._db_config, self._edge_attrs)
         self._node = NodeDAO(self._db_config, self._node_attrs)
 
-        self._nodes_cached = []
-        self._edges_cached = []
-
         self._length = None
 
     def __del__(self):
@@ -65,19 +62,19 @@ class GraphGP(nx.Graph):
     def __getitem__(self, n):
         return self.adj[n]
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def add_node(self, node_for_adding, **attr):
         pass
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def add_nodes_from(self, nodes_for_adding, **attr):
         pass
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def remove_node(self, n):
         pass
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def remove_nodes_from(self, nodes):
         pass
 
@@ -90,27 +87,27 @@ class GraphGP(nx.Graph):
     def has_node(self, n):
         return self.__contains__(n)
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def add_edge(self, u_of_edge, v_of_edge, **attr):
         pass
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def add_edges_from(self, ebunch_to_add, **attr):
         pass
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def add_weighted_edges_from(self, ebunch_to_add, weight='weight', **attr):
         pass
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def remove_edge(self, u, v):
         pass
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def remove_edges_from(self, ebunch):
         pass
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def update(self, edges=None, nodes=None):
         pass
 
@@ -132,7 +129,7 @@ class GraphGP(nx.Graph):
     def adjacency(self):
         return self._adj.iter_items()
 
-    @unsupported("Modifying graph is unsupported")
+    @not_permitted("Modifying graph is not permitted")
     def clear(self):
         pass
 
