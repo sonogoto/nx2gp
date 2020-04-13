@@ -11,8 +11,9 @@ SQL_FACTORY = {
     "query_edge": "SELECT %s FROM edges WHERE src_id = %s AND dst_id = %s",
     "query_adj": "SELECT edges.dst_id, <attrs> FROM edges WHERE edges.src_id = %s UNION \
                   SELECT edges.src_id, <attrs> FROM edges WHERE edges.dst_id = %s",
-    "iter_node": "SELECT id FROM vertices",
-    "iter_adj": "SELECT DISTINCT src_id FROM edges UNION SELECT DISTINCT dst_id FROM edges",
+    "iter_node": "SELECT id FROM vertices ORDER BY id",
+    "iter_adj": "SELECT t1.id FROM (SELECT DISTINCT src_id AS id FROM edges UNION\
+                        SELECT DISTINCT dst_id AS id FROM edges) AS t1 ORDER BY id",
     "check_adj_exists": "SELECT COUNT(1) FROM edges WHERE src_id = %s OR dst_id = %s",
     "count_adj": "SELECT COUNT(1) FROM (SELECT DISTINCT src_id FROM edges \
                     UNION SELECT DISTINCT dst_id FROM edges) AS t1;"
