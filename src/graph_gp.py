@@ -5,6 +5,7 @@ import networkx as nx
 from sql_factory import SQL_FACTORY
 from dao import AdjDAO
 from immutable_graph import ImmutableGraph
+from digraph_gp import DiGraphGP
 
 
 class GraphGP(ImmutableGraph, nx.Graph):
@@ -34,14 +35,14 @@ class GraphGP(ImmutableGraph, nx.Graph):
     def has_edge(self, u, v):
         assert u.__class__.__name__ == v.__class__.__name__
         self._cur.execute(
-            SQL_FACTORY["check_edge_exists"], (u, v)
+            SQL_FACTORY["check_edge_exists"], (u, v, v, u)
         )
         return self._cur.fetchall()[0][0] >= 1
 
     def get_edge_data(self, u, v, default=None):
         assert u.__class__.__name__ == v.__class__.__name__
         self._cur.execute(
-            SQL_FACTORY["query_edge"], (', '.join(self._edge_attrs), u, v)
+            SQL_FACTORY["query_edge"].replace("<attrs>", ', '.join(self._edge_attrs)), (u, v, v, u)
         )
         edge_data = self._cur.fetchone()
         return dict(zip(self._edge_attrs, edge_data[0])) if edge_data else default
@@ -49,8 +50,8 @@ class GraphGP(ImmutableGraph, nx.Graph):
     def adjacency(self):
         return self._adj.iter_items()
 
-    def copy(self, as_view=False):
-        return self.__class__(
+    def to_directed(self, as_view=False):
+        return DiGraphGP(
             db_host=self._db_config["host"],
             db_port=self._db_config["port"],
             db_user=self._db_config["user"],
@@ -60,9 +61,6 @@ class GraphGP(ImmutableGraph, nx.Graph):
             edge_attrs=self._edge_attrs,
             **self.graph
         )
-
-    def to_directed(self, as_view=False):
-        pass
 
     def to_undirected(self, as_view=False):
         return self.copy()

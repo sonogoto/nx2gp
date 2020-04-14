@@ -77,3 +77,15 @@ class ImmutableGraph:
     @not_permitted("Modifying graph is not permitted")
     def clear(self):
         pass
+
+    def copy(self, as_view=False):
+        return self.__class__(
+            db_host=self._db_config["host"],
+            db_port=self._db_config["port"],
+            db_user=self._db_config["user"],
+            db_passwd=self._db_config["password"],
+            db_name=self._db_config["database"],
+            node_attrs=self._node_attrs,
+            edge_attrs=self._edge_attrs,
+            **self.graph
+        )
