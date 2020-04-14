@@ -47,21 +47,6 @@ class GraphGP(nx.Graph):
         except AttributeError:
             pass
 
-    def __iter__(self):
-        return iter(self._node)
-
-    def __contains__(self, n):
-        if isinstance(n, str) or isinstance(n, int):
-            self._cur.execute(SQL_FACTORY["check_node_exists"], (n, ))
-            return self._cur.fetchall()[0][0] >= 1
-        return False
-
-    def __len__(self):
-        return self._node.__len__()
-
-    def __getitem__(self, n):
-        return self.adj[n]
-
     @not_permitted("Modifying graph is not permitted")
     def add_node(self, node_for_adding, **attr):
         pass
@@ -77,15 +62,6 @@ class GraphGP(nx.Graph):
     @not_permitted("Modifying graph is not permitted")
     def remove_nodes_from(self, nodes):
         pass
-
-    def number_of_nodes(self):
-        return self.__len__()
-
-    def order(self):
-        return self.__len__()
-
-    def has_node(self, n):
-        return self.__contains__(n)
 
     @not_permitted("Modifying graph is not permitted")
     def add_edge(self, u_of_edge, v_of_edge, **attr):

@@ -20,21 +20,6 @@ class DAO:
         except AttributeError:
             pass
 
-
-class NodeDAO(DAO):
-    def __getitem__(self, n):
-        self._query_cur.execute(
-            SQL_FACTORY["query_node"].replace("<attrs>", ', '.join(self._attrs)), (n, )
-        )
-        node_attr = self._query_cur.fetchall()
-        if not node_attr:
-            raise KeyError(n)
-        return dict(zip(self._attrs, node_attr[0]))
-
-    def __iter__(self):
-        self._iter_cur.execute(SQL_FACTORY["iter_node"])
-        return CursorIter(self._iter_cur)
-
     def __contains__(self, n):
         if isinstance(n, str) or isinstance(n, int):
             self._query_cur.execute(
@@ -49,6 +34,21 @@ class NodeDAO(DAO):
             self._length = self._query_cur.fetchall()[0][0]
         return self._length
 
+    def __iter__(self):
+        self._iter_cur.execute(SQL_FACTORY["iter_node"])
+        return CursorIter(self._iter_cur)
+
+
+class NodeDAO(DAO):
+    def __getitem__(self, n):
+        self._query_cur.execute(
+            SQL_FACTORY["query_node"].replace("<attrs>", ', '.join(self._attrs)), (n, )
+        )
+        node_attr = self._query_cur.fetchall()
+        if not node_attr:
+            raise KeyError(n)
+        return dict(zip(self._attrs, node_attr[0]))
+
     def items(self):
         self._iter_cur.execute(SQL_FACTORY["iter_node"])
         return list(ItemIter(self))
@@ -56,35 +56,53 @@ class NodeDAO(DAO):
 
 class AdjDAO(DAO):
     def __getitem__(self, n):
+        if n not in self:
+            raise KeyError(n)
         self._query_cur.execute(
             SQL_FACTORY["query_adj"].replace("<attrs>", ', '.join(self._attrs)), (n, n)
         )
         edge_attr = self._query_cur.fetchall()
         if not edge_attr:
-            raise KeyError(n)
+            return {}
         return {rec[0]: dict(zip(self._attrs, rec[1:])) for rec in edge_attr}
 
-    def __iter__(self):
-        self._iter_cur.execute(SQL_FACTORY["iter_adj"])
-        return CursorIter(self._iter_cur)
-
-    def __contains__(self, n):
-        if isinstance(n, str) or isinstance(n, int):
-            self._query_cur.execute(SQL_FACTORY["check_adj_exists"], (n, n))
-            return self._query_cur.fetchall()[0][0] >= 1
-        return False
-
-    def __len__(self):
-        if not self._length:
-            self._query_cur.execute(SQL_FACTORY["count_adj"])
-            self._length = self._query_cur.fetchall()[0][0]
-        return self._length
-
     def iter_items(self):
-        self._iter_cur.execute(SQL_FACTORY["iter_adj"])
+        self._iter_cur.execute(SQL_FACTORY["iter_node"])
         return ItemIter(self)
 
     def items(self):
         return list(self.iter_items())
 
 
+class SuccDao(DAO):
+    def __getitem__(self, n):
+        if n not in self:
+            raise KeyError(n)
+        self._query_cur.execute(
+            SQL_FACTORY["query_succ"].replace("<attrs>", ', '.join(self._attrs)), (n, )
+        )
+        edge_attr = self._query_cur.fetchall()
+        if not edge_attr:
+            return {}
+        return {rec[0]: dict(zip(self._attrs, rec[1:])) for rec in edge_attr}
+
+    def iter_items(self):
+        self._iter_cur.execute(SQL_FACTORY["iter_node"])
+        return ItemIter(self)
+
+    def items(self):
+        return list(self.iter_items())
+
+
+class PredDao(SuccDao):
+
+    def __getitem__(self, n):
+        if n not in self:
+            raise KeyError(n)
+        self._query_cur.execute(
+            SQL_FACTORY["query_pred"].replace("<attrs>", ', '.join(self._attrs)), (n, )
+        )
+        edge_attr = self._query_cur.fetchall()
+        if not edge_attr:
+            return {}
+        return {rec[0]: dict(zip(self._attrs, rec[1:])) for rec in edge_attr}
