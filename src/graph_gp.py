@@ -2,13 +2,12 @@
 
 
 import networkx as nx
-import psycopg2
-from not_permitted import not_permitted
 from sql_factory import SQL_FACTORY
-from dao import AdjDAO, NodeDAO
+from dao import AdjDAO
+from immutable_graph import ImmutableGraph
 
 
-class GraphGP(nx.Graph):
+class GraphGP(ImmutableGraph, nx.Graph):
 
     def __init__(
             self,
@@ -21,71 +20,16 @@ class GraphGP(nx.Graph):
             edge_attrs=('weight', ),
             **graph_attr):
 
-        self._db_config = {
-            "host": db_host,
-            "port": db_port,
-            "database": db_name,
-            "user": db_user,
-            "password": db_passwd
-        }
-        self._conn = psycopg2.connect(
-            **self._db_config
+        super(GraphGP, self).__init__(
+            db_host, db_port, db_user, db_passwd, db_name, node_attrs, edge_attrs, **graph_attr
         )
-        self._cur = self._conn.cursor()
-
-        self._node_attrs = node_attrs
-        self._edge_attrs = edge_attrs
-        self.graph = graph_attr
         self._adj = AdjDAO(self._db_config, self._edge_attrs)
-        self._node = NodeDAO(self._db_config, self._node_attrs)
-
-        self._length = None
 
     def __del__(self):
         try:
             self._conn.close()
         except AttributeError:
             pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def add_node(self, node_for_adding, **attr):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def add_nodes_from(self, nodes_for_adding, **attr):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def remove_node(self, n):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def remove_nodes_from(self, nodes):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def add_edge(self, u_of_edge, v_of_edge, **attr):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def add_edges_from(self, ebunch_to_add, **attr):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def add_weighted_edges_from(self, ebunch_to_add, weight='weight', **attr):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def remove_edge(self, u, v):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def remove_edges_from(self, ebunch):
-        pass
-
-    @not_permitted("Modifying graph is not permitted")
-    def update(self, edges=None, nodes=None):
-        pass
 
     def has_edge(self, u, v):
         assert u.__class__.__name__ == v.__class__.__name__
@@ -104,10 +48,6 @@ class GraphGP(nx.Graph):
 
     def adjacency(self):
         return self._adj.iter_items()
-
-    @not_permitted("Modifying graph is not permitted")
-    def clear(self):
-        pass
 
     def copy(self, as_view=False):
         return self.__class__(
