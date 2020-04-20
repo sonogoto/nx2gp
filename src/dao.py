@@ -6,8 +6,12 @@ from iterators import CursorIter, ItemIter
 
 
 class DAO:
+
+    _conn = None
+
     def __init__(self, db_config, attrs):
-        self._conn = psycopg2.connect(**db_config)
+        if self.__class__._conn is None:
+            self._conn = psycopg2.connect(**db_config)
         self._query_cur = self._conn.cursor()
         self._iter_cur = self._conn.cursor()
         self._attrs = attrs

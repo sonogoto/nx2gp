@@ -7,6 +7,8 @@ from dao import NodeDAO
 
 class ImmutableGraph:
 
+    _conn = None
+
     def __init__(
             self,
             db_host="127.0.0.1",
@@ -25,9 +27,10 @@ class ImmutableGraph:
             "user": db_user,
             "password": db_passwd
         }
-        self._conn = psycopg2.connect(
-            **self._db_config
-        )
+        if self.__class__._conn is None:
+            self.__class__._conn = psycopg2.connect(
+                **self._db_config
+            )
         self._cur = self._conn.cursor()
         self._node_attrs = node_attrs
         self._edge_attrs = edge_attrs
