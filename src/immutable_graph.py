@@ -8,6 +8,7 @@ from dao import NodeDAO
 class ImmutableGraph:
 
     _conn = None
+    _conn_user_cnt = 0
 
     def __init__(
             self,
@@ -27,15 +28,23 @@ class ImmutableGraph:
             "user": db_user,
             "password": db_passwd
         }
-        if self.__class__._conn is None:
+        if self.__class__._conn is None or self.__class__._conn_user_cnt == 0:
             self.__class__._conn = psycopg2.connect(
                 **self._db_config
             )
+        self.__class__._conn_user_cnt += 1
         self._cur = self._conn.cursor()
         self._node_attrs = node_attrs
         self._edge_attrs = edge_attrs
         self.graph = graph_attr
         self._node = NodeDAO(self._db_config, self._node_attrs)
+
+    def __del__(self):
+        try:
+            self.__class__._conn_user_cnt -= 1
+            if self.__class__._conn_user_cnt == 0: self.__class__._conn.close()
+        except AttributeError:
+            pass
 
     @not_permitted("Modifying graph is not permitted")
     def add_node(self, node_for_adding, **attr):

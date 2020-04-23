@@ -22,12 +22,6 @@ class DiGraphGP(ImmutableGraph, nx.DiGraph):
         self._pred = PredDao(self._db_config, self._edge_attrs)  # predecessor
         self._succ = SuccDao(self._db_config, self._edge_attrs)  # successor
 
-    def __del__(self):
-        try:
-            self._conn.close()
-        except AttributeError:
-            pass
-
     def adjacency(self):
         return self._adj.iter_items()
 

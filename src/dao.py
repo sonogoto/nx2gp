@@ -8,10 +8,12 @@ from iterators import CursorIter, ItemIter
 class DAO:
 
     _conn = None
+    _conn_user_cnt = 0
 
     def __init__(self, db_config, attrs):
-        if self.__class__._conn is None:
-            self._conn = psycopg2.connect(**db_config)
+        if self.__class__._conn is None or self.__class__._conn_user_cnt == 0:
+            self.__class__._conn = psycopg2.connect(**db_config)
+        self.__class__._conn_user_cnt += 1
         self._query_cur = self._conn.cursor()
         self._iter_cur = self._conn.cursor()
         self._attrs = attrs
@@ -20,7 +22,8 @@ class DAO:
 
     def __del__(self):
         try:
-            self._conn.close()
+            self.__class__._conn_user_cnt -= 1
+            if self.__class__._conn_user_cnt == 0: self.__class__._conn.close()
         except AttributeError:
             pass
 

@@ -25,12 +25,6 @@ class GraphGP(ImmutableGraph, nx.Graph):
         )
         self._adj = AdjDAO(self._db_config, self._edge_attrs)
 
-    def __del__(self):
-        try:
-            self._conn.close()
-        except AttributeError:
-            pass
-
     def adjacency(self):
         return self._adj.iter_items()
 
