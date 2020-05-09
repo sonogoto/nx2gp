@@ -11,7 +11,7 @@ class DAO:
     _conn_user_cnt = 0
 
     def __init__(self, db_config, attrs):
-        if self.__class__._conn is None or self.__class__._conn_user_cnt == 0:
+        if self.__class__._conn is None:
             self.__class__._conn = psycopg2.connect(**db_config)
         self.__class__._conn_user_cnt += 1
         self._query_cur = self._conn.cursor()
@@ -23,7 +23,9 @@ class DAO:
     def __del__(self):
         try:
             self.__class__._conn_user_cnt -= 1
-            if self.__class__._conn_user_cnt == 0: self.__class__._conn.close()
+            if self.__class__._conn_user_cnt == 0:
+                self.__class__._conn.close()
+                self.__class__._conn = None
         except AttributeError:
             pass
 
